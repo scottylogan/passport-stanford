@@ -1,0 +1,41 @@
+{
+  "name": "passport-stanford",
+  "version": "1.0.0",
+  "description": "Passport-SAML wrapper for Stanford.EDU",
+  "main": "index.js",
+  "scripts": {
+    "test": "cd test && node app.js"
+  },
+  "homepage": "https://github.com/su-et/passport-stanford",
+  "bugs": {
+    "url": "https://github.com/su-et/passport-stanford/issues",
+    "email": "emerging-tech@lists.stanford.edu"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/su-et/passport-stanford.git"
+  },
+  "keywords": [
+    "passport",
+    "SAML",
+    "SAML 2.0",
+    "shibboleth",
+    "SSO",
+    "LSJU",
+    "Stanford University"
+  ],
+  "author": "Scotty Logan <swl@stanford.edu> (https://itarch.stanford.edu/)",
+  "contributors": [
+    "Scotty Logan <swl@stanford.edu> (https://itarch.stanford.edu/)"
+  ],
+  "maintainers": [
+    "Scotty Logan <swl@stanford.edu> (https://itarch.stanford.edu/)"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "passport-saml": ">=0.15.0"
+  },
+  "engines": {
+      "node": ">=4.3.2"
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "name": "passport-stanford-example",
+  "version": "0.0.1",
+  "description": "Example for Passport-Stanford strategy",
+  "author": "Scotty Logan <swl@stanford.edu>",
+  "contributors": [
+    {
+      "name": "Gerard Braad",
+      "email": "me@gbraad.nl",
+      "url": "http://gbraad.nl"
+    }
+  ],
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "body-parser": "*",
+    "cookie-parser": "*",
+    "errorhandler": "*",
+    "express": "*",
+    "express-session": "*",
+    "method-override": "*",
+    "morgan": "*",
+    "passport": "*",
+    "passport-saml": "*",
+    "passport-stanford": "file:..",
+    "pug": "2.0.0-beta4",
+    "qs": "*",
+    "serve-static": "*"
+  },
+  "engines": {
+    "node": ">= 4.3.2"
+  }
+}
