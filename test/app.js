@@ -5,7 +5,6 @@ var http          = require('http'),
     session       = require('express-session'),
     morgan        = require('morgan'),
     bodyParser    = require('body-parser'),
-//    serveStatic   = require('serve-static'),
     passport      = require('passport'),
     suSAML        = require('passport-stanford'),
     app           = express(),
@@ -13,13 +12,11 @@ var http          = require('http'),
     loginPath     = '/login',
     saml;
 
-
-app.use(morgan('dev'));
-
 app.set('port', 3000);
 app.set('views', __dirname + '/app/views');
 app.set('view engine', 'pug');
 
+app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 app.use(session({
@@ -30,12 +27,9 @@ app.use(session({
     secret: true
   }
 }));
-
 app.use(passport.initialize());
 app.use(passport.session());
 
-
-console.error('creating strategy');
 saml = new suSAML.Strategy({
   protocol:   'http://',
   idp:        'itlabv2',
@@ -49,14 +43,17 @@ saml = new suSAML.Strategy({
 passport.use(saml);
 
 passport.serializeUser(function(user, done){
-    done(null, user);
+  done(null, JSON.stringify(user));
 });
 
-passport.deserializeUser(function(user, done){
-    done(null, user);
+passport.deserializeUser(function(json, done){
+  try {
+    done(null, JSON.parse(json));
+  } catch (err) {
+    done(err, null);
+  }
 });
 
-console.error('saml.name:', saml.name);
 app.use(function (err, req, res, next) {
   res.status(err.status || 500);
   res.render('500', { error: err }); 
@@ -99,15 +96,13 @@ app.get('/bad', function (req, res, next) {
   next(new Error('BAD!!!'));
 });
 
-app.use(express.static('public'));
+//app.use(express.static('public'));
 app.use(function (req, res, next) {
-  console.error('404',req.url);
   res.status(404);
   res.render('404', { url : req.url });
 });
 
 app.use(function (err, req, res, next) {
-  console.error('500');
   res.status(500);
   res.render('500', { error: err });
 });
