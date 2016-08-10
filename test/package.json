@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "Example for Passport-Stanford strategy",
   "author": "Scotty Logan <swl@stanford.edu>",
+  "license": "MIT",
   "contributors": [
     {
       "name": "Gerard Braad",
@@ -10,6 +11,10 @@
       "url": "http://gbraad.nl"
     }
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/su-et/passport-stanford.git"
+  },
   "scripts": {
     "start": "node app.js"
   },
