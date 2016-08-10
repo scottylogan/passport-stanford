@@ -1,4 +1,5 @@
 var saml  = require('passport-saml'),
+    fs    = require('fs'),
     util  = require('util'),
     url   = require('url'),
     idps  = require('./lib/idps'),
