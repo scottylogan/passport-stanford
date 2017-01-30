@@ -59,9 +59,9 @@ or, to add it to your
 # Usage
 
 There is a fully-working example server script in
-[/test/app.js](/su-et/passport-stanford/blob/master/test/app.js),
+[/test/app.js](/scottylogan/passport-stanford/blob/master/test/app.js),
 and an associated
-[package.json](/su-et/passport-stanford/blob/master/test/package.json),
+[package.json](/scottylogan/passport-stanford/blob/master/test/package.json),
 which you can use to install all the necessary
 packages to make the example script run (express, express middleware,
 passport, etc.).
@@ -162,6 +162,36 @@ You can also protect a set of routes by calling `protect` from
     app.use(saml.protect());
 
 Any route requested after this middleware will require authentication.
+
+## Signed Responses
+
+`passport-stanford` includes the public certs used by the Stanford IdPs
+to sign SAML responses and/or assertions, so signature verification is
+enabled by default.
+
+## Encrypted Assertions
+
+To use encrypted assertions you will need a private / public X.509 key
+pair. The test app
+[/test/package.json](/scottylogan/passport-stanford/blob/master/test/pac
+kage.json) contains a `gencert` script to generate a key and
+self-signed certificate. To configure encryption, add the paths to your
+key and cert to the config:
+
+    saml = new suSAML.Strategy({
+      protocol:           'http://',
+      idp:                'itlab',
+      entityId:           'https://github.com/scottylogan/passport-stanford',
+      path:               acsPath,
+      loginPath:          loginPath,
+      passReqToCallback:  true,
+      passport:           passport,
+      decryptionPvkPath:  './private.pem',
+      decryptionCertPath: './public.pem',
+    });
+
+The public certificate will be included in the automatically generated
+metadata. You will need to provide the metadata to your IdP.
 
 ## User Information
 
