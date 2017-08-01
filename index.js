@@ -36,7 +36,7 @@ function suSAML (samlConfig) {
     protocol: 'https://',
     signatureAlgorithm: 'sha256',
     identifierFormat: 'urn:oasis:names:tc:SAML:2.0:nameid-format:transient',
-    acceptedClockSkewMs: 500,
+    acceptedClockSkewMs: 2000,
     attributeConsumingServiceIndex: false,
     disableRequestedAuthnContext: true,
     forceAuthn: false,
