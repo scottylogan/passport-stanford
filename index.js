@@ -61,6 +61,7 @@ function suSAML (samlConfig) {
           if (idp) {
             self._config.entryPoint = idp.entryPoint;
             self._config.cert = idp.cert;
+            this.name = samlConfig.idp;
           } else {
             throw new Error('Unknown IDP: ' + samlConfig.idp);
           }
@@ -110,8 +111,6 @@ function suSAML (samlConfig) {
     }
     return done(error, user);
   });
-
-  this.name = 'suSAML';
 
 };
 
