@@ -42,6 +42,7 @@ function suSAML (samlConfig) {
     forceAuthn: false,
     skipRequestCompression: false,
     validateInResponseTo: true,
+    name: 'saml',
   };
 
   if (samlConfig) {
@@ -61,7 +62,7 @@ function suSAML (samlConfig) {
           if (idp) {
             self._config.entryPoint = idp.entryPoint;
             self._config.cert = idp.cert;
-            this.name = samlConfig.idp;
+            self._config.name = samlConfig.idp;
           } else {
             throw new Error('Unknown IDP: ' + samlConfig.idp);
           }
@@ -112,6 +113,7 @@ function suSAML (samlConfig) {
     return done(error, user);
   });
 
+  this.name = this._config.name;
 };
 
 util.inherits(suSAML, saml.Strategy);
