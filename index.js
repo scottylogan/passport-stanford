@@ -1,128 +1,108 @@
-var saml  = require('passport-saml'),
-    fs    = require('fs'),
-    util  = require('util'),
-    url   = require('url'),
-    idps  = require('./lib/idps'),
-    names = require('./lib/attributes');
+var saml    = require('passport-saml'),
+    fs      = require('fs'),
+    util    = require('util'),
+    url     = require('url'),
+    idps    = require('./lib/idps'),
+    attrmap = require('./lib/attributes');
 
-function rewriteAttributes (req, profile, done) {
-  var user  = {},
-      error = null;
+/*
+  An extensnion of the Passport SAML strategy for Stanford.
+*/
+function strategy (options, verify) {
 
-  if (typeof profile === 'function') {
-    done = profile;
-    profile = req;
-    req = null;
+  // some sensible defaults
+  options.protocol = options.protocol || 'https://';
+  options.signatureAlgorithm = options.signatureAlgorithm || 'sha256';
+  options.identifierFormat = options.identifierFormat || 'urn:oasis:names:tc:SAML:2.0:nameid-format:transient';
+  options.acceptedClockSkewMs = options.acceptedClockSkewMs || 60000;
+  options.attributeConsumingServiceIndex = options.attributeConsumingServiceIndex || false;
+  options.forceAuthn = options.forceAuthn || false;
+  options.skipRequestCompression = options.skipRequestCompression || false;
+
+  if (options.disableRequestedAuthnContext === undefined) {
+    options.disableRequestedAuthnContext = true;
   }
 
-  if (!profile) {
-    error = new Error('No SAML attributes returned');
-  } else {
-    Object.keys(profile).forEach(function (oid) {
-      user[oid] = profile[oid];
-      if (names[oid]) {
-        user[names[oid]] = profile[oid];
-      }
-    });
-  }
-  return done(error, user);
-}
-
-//module.exports.Strategy = function suSAML (samlConfig) {
-function suSAML (samlConfig) {
-  var self = this;
-
-  this._config = {
-    protocol: 'https://',
-    signatureAlgorithm: 'sha256',
-    identifierFormat: 'urn:oasis:names:tc:SAML:2.0:nameid-format:transient',
-    acceptedClockSkewMs: 60000,
-    attributeConsumingServiceIndex: false,
-    disableRequestedAuthnContext: true,
-    forceAuthn: false,
-    skipRequestCompression: false,
-    validateInResponseTo: true,
-    name: 'saml',
-  };
-
-  if (samlConfig) {
-    Object.keys(samlConfig).forEach(function (k) {
-      var idp;
-      switch (k) {
-        case 'decryptionCertPath':
-          self._config.decryptionCert = fs.readFileSync(samlConfig[k], 'utf8');
-          break;
-
-        case 'decryptionPvkPath':
-          self._config.decryptionPvk = fs.readFileSync(samlConfig[k], 'utf8');
-          break;
-
-        case 'idp':
-          idp = idps[samlConfig[k]];
-          if (idp) {
-            self._config.entryPoint = idp.entryPoint;
-            self._config.cert = idp.cert;
-            self._config.name = samlConfig.idp;
-          } else {
-            throw new Error('Unknown IDP: ' + samlConfig.idp);
-          }
-          break;
-
-        case 'entityId':
-        case 'entityID':
-          self._config.issuer = samlConfig[k];
-          break;
-
-        default:
-          self._config[k] = samlConfig[k];
-          break;
-      }
-    });
+  if (options.validatedInResponseTo === undefined) {
+    options.validateInResponseTo = true;
   }
 
-  if (!this._config.entryPoint || !this._config.cert) {
-    throw new Error('No IDP defined!');
+  if (options.decryptionCertPath) {
+    options.decryptionCert = fs.readFileSync(options.decryptionCertPath, 'utf8');
   }
-  
-  if (!this._config.loginPath) {
+
+  if (options.decryptionPvkPath) {
+    options.decryptionPvk = fs.readFileSync(options.decryptionPvkPath, 'utf8');
+  }
+
+  if (options.entityID) {
+    options.issuer = options.entityID;
+  }
+
+  if (options.entityId) {
+    options.issuer = options.entityId;
+  }
+
+  if (options.idp) {
+    if (idps[options.idp]) {
+      options.entryPoint = idps[options.idp].entryPoint;
+      options.cert = idps[options.idp].cert;
+    } else {
+      throw new Error('Unknown IdP: ' + options.idp);
+    }
+  }
+
+  if (!options.entryPoint || !options.cert) {
+    console.warn('No IdP defined - defaulting to ' + idps.dev.entityID);
+    options.entryPoint = idps.dev.entryPoint;
+    options.cert = idps.dev.cert;
+  }
+
+  if (!options.issuer) {
+    throw new Error('No entityId defined!');
+  }
+
+  // having either both an encryption cert and private key is valid
+  // having neither an encryption cert nor a private key is also valid
+  // having only one or the other is NOT valid
+  if (!options.decryptionCert && options.decryptionPvk) {
+    throw new Error('Only a private key was defined; a public cert is also required');
+  }
+
+  if (options.decryptionCert && !options.decryptionPvk) {
+    throw new Error('Only a public cert was defined; a private key is also required')
+  }
+
+  if (!options.loginPath) {
     throw new Error('No loginPath defined!');
   }
 
-//  saml.Strategy.call(this, this._config, rewriteAttributes);
+  this.loginPath = options.loginPath;
 
-  saml.Strategy.call(this, this._config, function rewriteAttributes (req, profile, done) {
-    var user  = {},
-        error = null;
+  // set up an attribute mapper
+  this.attributeMapper = attrmap(options.attributeMap);
 
-    if (typeof profile === 'function') {
-      done = profile;
-      profile = req;
-      req = null;
-    }
+  // call the parent method before setting the strategy name,
+  // otherwise the name will always be 'saml'
+  saml.Strategy.call(this, options, function (req, profile, done) {
+    req.session.strategy = this.name;
+    this.attributeMapper(profile, done);
+  }.bind(this));
 
-    if (!profile) {
-      error = new Error('No SAML attributes returned');
-    } else {
-      Object.keys(profile).forEach(function (oid) {
-        user[oid] = profile[oid];
-        if (names[oid]) {
-          user[names[oid]] = profile[oid];
-        }
-      });
-    }
-    return done(error, user);
-  });
+  // set the name of this strategy to either the name passed in
+  // via the options, or the short name of the idp.
+  //
+  // if neither is set, the name will be 'suSAML'
 
-  this.name = this._config.name;
+  this.name = options.name || options.idp || 'suSAML';
+
 };
 
-util.inherits(suSAML, saml.Strategy);
+util.inherits(strategy, saml.Strategy);
 
-suSAML.prototype.protect = function protect () {
-  var self = this;
-
+strategy.prototype.protect = function protect () {
   return function(req, res, next) {
-    if (req.isAuthenticated()) {
+    if (req.isAuthenticated() && req.session.strategy === this.name) {
       return next();
     } else {
       if (req.session) {
@@ -130,12 +110,12 @@ suSAML.prototype.protect = function protect () {
       } else {
         console.warn('passport-stanford: No session property on request!');
       }
-      res.redirect(self._config.loginPath);
+      res.redirect(this.loginPath);
     }
-  };
+  }.bind(this);
 };
 
-suSAML.prototype.return = function _return (url) {
+strategy.prototype.return = function _return (url) {
   return function(req, res) {
     if (req.session) {
       url = req.session.authReturnUrl;
@@ -145,12 +125,11 @@ suSAML.prototype.return = function _return (url) {
   };
 };
 
-suSAML.prototype.metadata = function metadata () {
-  var self = this;
+strategy.prototype.metadata = function metadata () {
   return function(req, res) {
     res.type('application/xml');
-    res.status(200).send(self.generateServiceProviderMetadata(self._config.decryptionCert));
-  }
+    res.status(200).send(this.generateServiceProviderMetadata(this._config.decryptionCert));
+  }.bind(this);
 };
 
-module.exports.Strategy = suSAML;
+module.exports.Strategy = strategy;
