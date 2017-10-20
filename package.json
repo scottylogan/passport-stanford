@@ -4,7 +4,7 @@
   "description": "Passport-SAML wrapper for Stanford.EDU",
   "main": "index.js",
   "scripts": {
-    "test": "cd test && npm install && node app.js"
+    "test": "cd test && npm start"
   },
   "homepage": "https://github.com/scottylogan/passport-stanford",
   "bugs": {
