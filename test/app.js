@@ -7,9 +7,11 @@ var http          = require('http'),
     bodyParser    = require('body-parser'),
     passport      = require('passport'),
     suSAML        = require('passport-stanford'),
+    util          = require('util'),
     app           = express(),
-    acsPath       = '/saml/consume',
+    acsPath       = '/acs',
     loginPath     = '/login',
+    forcedSaml,
     saml;
 
 app.set('port', 3000);
@@ -22,9 +24,11 @@ app.use(cookieParser());
 app.use(session({
   secret: 'sooperS3CRET!',
   resave: false,
-  saveUninitialized: false,
+  saveUninitialized: true,
   cookie: {
-    secret: true
+    secret: true,
+    httpOnly: true,
+    maxAge: 600000
   }
 }));
 app.use(passport.initialize());
@@ -42,7 +46,22 @@ saml = new suSAML.Strategy({
   decryptionCertPath: './public.pem',
 });
 
+forcedSaml = new suSAML.Strategy({
+  name:               'forced',
+  protocol:           'http://',
+  idp:                'itlab',
+  entityId:           'https://github.com/scottylogan/passport-stanford',
+  path:               '/forced' + acsPath,
+  loginPath:          '/forced' + loginPath,
+  passReqToCallback:  true,
+  passport:           passport,
+  forceAuthn:         true,
+  decryptionPvkPath:  './private.pem',
+  decryptionCertPath: './public.pem',
+},console);
+
 passport.use(saml);
+passport.use(forcedSaml);
 
 passport.serializeUser(function(user, done){
   done(null, JSON.stringify(user));
@@ -78,6 +97,16 @@ app.post(acsPath,
   saml.return('/')
 );
 
+app.get('/forced' + loginPath,
+  passport.authenticate(forcedSaml.name),
+  saml.return('/')
+);
+
+app.post('/forced' + acsPath,
+  passport.authenticate(forcedSaml.name),
+  saml.return('/')
+);
+
 app.get('/metadata',
   saml.metadata()
 );
@@ -85,7 +114,20 @@ app.get('/metadata',
 app.get('/profile', 
   saml.protect(),
   function(req, res) {
-    res.render('profile', { user : req.user	});
+    res.render('profile', {
+      user: req.user,
+      all:  util.inspect(req.user, { depth: null })
+    });
+  }
+);
+
+app.get('/forced',
+  forcedSaml.protect(),
+  function(req, res) {
+    res.render('profile', {
+      user: req.user,
+      all:  util.inspect(req.user, { depth: null })
+    });
   }
 );
 
