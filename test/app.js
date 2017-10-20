@@ -9,8 +9,7 @@ var http          = require('http'),
     suSAML        = require('passport-stanford'),
     util          = require('util'),
     app           = express(),
-    acsPath       = '/acs',
-    loginPath     = '/login',
+    samlPath      = '/saml',
     forcedSaml,
     saml;
 
@@ -38,8 +37,8 @@ saml = new suSAML.Strategy({
   protocol:           'http://',
   idp:                'itlab',
   entityId:           'https://github.com/scottylogan/passport-stanford',
-  path:               acsPath,
-  loginPath:          loginPath,
+  path:               samlPath,
+  loginPath:          samlPath,
   passReqToCallback:  true,
   passport:           passport,
   decryptionPvkPath:  './private.pem',
@@ -51,14 +50,14 @@ forcedSaml = new suSAML.Strategy({
   protocol:           'http://',
   idp:                'itlab',
   entityId:           'https://github.com/scottylogan/passport-stanford',
-  path:               '/forced' + acsPath,
-  loginPath:          '/forced' + loginPath,
+  path:               samlPath + '/forced',
+  loginPath:          samlPath + '/forced',
   passReqToCallback:  true,
   passport:           passport,
   forceAuthn:         true,
   decryptionPvkPath:  './private.pem',
   decryptionCertPath: './public.pem',
-},console);
+});
 
 passport.use(saml);
 passport.use(forcedSaml);
@@ -87,24 +86,20 @@ app.get('/', function(req, res) {
 	});
 });
 
-app.get(loginPath,
-  passport.authenticate(saml.name),
-  saml.return('/')
-);
+app.all([samlPath, samlPath + ':strategy'],
+  function (req, res, next) {
+    if (['GET','POST'].indexOf(req.method) === -1) {
+      return res.status(405).send('Method not supported');
+    }
+    req.params.strategy = req.params.strategy || 'itlab';
 
-app.post(acsPath,
-  passport.authenticate(saml.name),
-  saml.return('/')
-);
-
-app.get('/forced' + loginPath,
-  passport.authenticate(forcedSaml.name),
-  saml.return('/')
-);
-
-app.post('/forced' + acsPath,
-  passport.authenticate(forcedSaml.name),
-  saml.return('/')
+    if (['itlab','forced'].indexOf(req.params.strategy) === -1) {
+      return res.status(400).send('Invalid request');
+    }
+    return passport.authenticate(req.params.strategy, {
+      successReturnToOrRedirect: '/'
+    })(req, res, next);
+  }
 );
 
 app.get('/metadata',
