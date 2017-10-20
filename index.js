@@ -106,7 +106,7 @@ strategy.prototype.protect = function protect () {
       return next();
     } else {
       if (req.session) {
-        req.session.authReturnUrl = req.url;
+        req.session.returnTo = req.url;
       } else {
         console.warn('passport-stanford: No session property on request!');
       }
@@ -117,9 +117,9 @@ strategy.prototype.protect = function protect () {
 
 strategy.prototype.return = function _return (url) {
   return function(req, res) {
-    if (req.session) {
-      url = req.session.authReturnUrl;
-      delete req.session.authReturnUrl;
+    if (req.session && req.session.returnTo) {
+      url = req.session.returnTo;
+      delete req.session.returnTo;
     }
     res.redirect(url || '/');
   };
