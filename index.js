@@ -106,6 +106,7 @@ strategy.prototype.protect = function protect () {
       return next();
     } else {
       if (req.session) {
+        req.session.strategy = this.name;
         req.session.returnTo = req.url;
       } else {
         console.warn('passport-stanford: No session property on request!');
