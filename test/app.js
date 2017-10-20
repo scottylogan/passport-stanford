@@ -50,8 +50,8 @@ forcedSaml = new suSAML.Strategy({
   protocol:           'http://',
   idp:                'itlab',
   entityId:           'https://github.com/scottylogan/passport-stanford',
-  path:               samlPath + '/forced',
-  loginPath:          samlPath + '/forced',
+  path:               samlPath,
+  loginPath:          samlPath,
   passReqToCallback:  true,
   passport:           passport,
   forceAuthn:         true,
@@ -82,21 +82,16 @@ app.use(function (err, req, res, next) {
 app.get('/', function(req, res) {
   res.render('home', {
     user: req.isAuthenticated() ? req.user : null,
-    loginPath: loginPath,
+    loginPath: samlPath,
 	});
 });
 
-app.all([samlPath, samlPath + ':strategy'],
+app.all(samlPath,
   function (req, res, next) {
     if (['GET','POST'].indexOf(req.method) === -1) {
       return res.status(405).send('Method not supported');
     }
-    req.params.strategy = req.params.strategy || 'itlab';
-
-    if (['itlab','forced'].indexOf(req.params.strategy) === -1) {
-      return res.status(400).send('Invalid request');
-    }
-    return passport.authenticate(req.params.strategy, {
+    return passport.authenticate(req.session.strategy, {
       successReturnToOrRedirect: '/'
     })(req, res, next);
   }
@@ -135,7 +130,6 @@ app.get('/bad', function (req, res, next) {
   next(new Error('BAD!!!'));
 });
 
-//app.use(express.static('public'));
 app.use(function (req, res, next) {
   res.status(404);
   res.render('404', { url : req.url });
