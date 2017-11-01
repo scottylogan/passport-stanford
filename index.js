@@ -129,7 +129,7 @@ strategy.prototype.return = function _return (url) {
 strategy.prototype.metadata = function metadata () {
   return function(req, res) {
     res.type('application/xml');
-    res.status(200).send(this.generateServiceProviderMetadata(this._config.decryptionCert));
+    res.status(200).send(this.generateServiceProviderMetadata(this._saml.options.decryptionCert));
   }.bind(this);
 };
 
