@@ -24,8 +24,8 @@ app.use(session({
   secret: 'sooperS3CRET!',
   resave: false,
   saveUninitialized: true,
+  name: 'stanford',
   cookie: {
-    secret: true,
     httpOnly: true,
     maxAge: 600000
   }
