@@ -16,13 +16,6 @@ IdPs, only `itlabv2` is currently usable without registration. Each IdP
 can be referenced in the Passport configuration by its SAML *entityID*
 or a short alias:
 
-### itlabv2 (https://idp.itlab.stanford.edu/idp/shibboleth)
-
-`idp.itlab` is a very trusting Shibboleth v2.x IdP run by the Emerging
-Technology group, and will work with any SP that includes its ACS URL
-in its `AuthnRequest`s - it also has three [test
-users](https://idp.itlab.stanford.edu/).
-
 ### itlab (https://weblogin.itlab.stanford.edu/idp/shibboleth)
 
 `weblogin.itlab` is a Shibboleth v3.x IdP run by the Emerging
