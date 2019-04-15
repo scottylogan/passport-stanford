@@ -11,14 +11,17 @@ block content
     dt Affiliations
     dd 
       ul
-        each affil in user.eduPersonAffiliation.sort()
-          li= affil
+        if user.eduPersonAffiliation
+          each affil in user.eduPersonAffiliation.sort()
+            li= affil
     dd
     dt Groups
     dd
       ul
-        each group in user.eduPersonEntitlement.sort()
-          li= group
+        if user.eduPersonEntitlement
+          each group in user.eduPersonEntitlement.sort()
+            li= group
 
+  h1 All Attributes
   pre= all
   a(href="/logout") Logout
