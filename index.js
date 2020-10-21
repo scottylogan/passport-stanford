@@ -23,7 +23,7 @@ function strategy (options, verify) {
     options.disableRequestedAuthnContext = true;
   }
 
-  if (options.validatedInResponseTo === undefined) {
+  if (options.validateInResponseTo === undefined) {
     options.validateInResponseTo = true;
   }
 
