@@ -30,7 +30,7 @@
     "passport": "*",
     "passport-saml": "*",
     "passport-stanford": "file:..",
-    "pug": "2.0.0-beta4",
+    "pug": "3.0.1",
     "qs": "*"
   },
   "engines": {
